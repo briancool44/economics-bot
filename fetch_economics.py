@@ -82,7 +82,7 @@ def fetch_all_news() -> list[dict]:
 
     print("▶ 日本語ニュースを取得中...")
     for query in JAPANESE_QUERIES:
-        articles = fetch_news(query, language="jp", page_size=10)
+        articles = fetch_news(query, language="ja", page_size=10)
         added = 0
         for article in articles:
             url = article.get("url", "")
@@ -245,6 +245,23 @@ CATEGORY_COLORS = {
 RANK_MEDALS = {1: "🥇", 2: "🥈", 3: "🥉"}
 
 
+def _generate_error_html(message: str) -> str:
+    """エラー発生時のフォールバック HTML を生成する"""
+    now = datetime.now(JST)
+    return f"""<!DOCTYPE html>
+<html lang="ja">
+<head><meta charset="UTF-8"><title>Economics Bot - エラー</title>
+<style>body{{font-family:sans-serif;display:flex;justify-content:center;align-items:center;min-height:100vh;background:#f0f2f5;margin:0}}
+.box{{background:#fff;border-radius:12px;padding:40px;max-width:500px;text-align:center;box-shadow:0 2px 12px rgba(0,0,0,.1)}}
+h1{{color:#e74c3c;margin-bottom:16px}}p{{color:#555}}.time{{color:#aaa;font-size:.85rem;margin-top:16px}}</style>
+</head>
+<body><div class="box">
+<h1>⚠️ 取得エラー</h1>
+<p>{message}</p>
+<p class="time">実行日時: {now.strftime('%Y-%m-%d %H:%M JST')}</p>
+</div></body></html>"""
+
+
 def generate_html(ranked_articles: list[dict]) -> str:
     """ランキング済み記事から HTML を生成する"""
     now = datetime.now(JST)
@@ -372,7 +389,11 @@ def main() -> None:
 
     articles = fetch_all_news()
     if not articles:
-        raise RuntimeError("ニュースを1件も取得できませんでした")
+        print("[WARN] ニュースを1件も取得できませんでした。エラーページを生成します。")
+        html = _generate_error_html("ニュースを取得できませんでした。News API キーまたはネットワーク接続を確認してください。")
+        Path("economics_news.html").write_text(html, encoding="utf-8")
+        print("✅ エラーページを保存しました: economics_news.html")
+        return
 
     ranked = rank_news_with_claude(articles)
 
