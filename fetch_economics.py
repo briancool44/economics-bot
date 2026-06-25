@@ -45,7 +45,7 @@ def fetch_news(query: str, language: str, page_size: int = 10) -> list[dict]:
     """News API で指定クエリのニュースを取得する"""
     url = "https://newsapi.org/v2/everything"
     now = datetime.now(JST)
-    from_date = (now - timedelta(hours=24)).strftime("%Y-%m-%dT%H:%M:%S")
+    from_date = (now - timedelta(days=7)).strftime("%Y-%m-%dT%H:%M:%S")
 
     params = {
         "q": query,
